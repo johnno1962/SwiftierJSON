@@ -24,17 +24,35 @@ class SwiftyJSONTests: XCTestCase {
     
     func testJSONValueDoesInitWithValidData() {
         let json = JSONValue(validJSONData)
+/*
         switch json{
         case .JInvalid:
             XCTFail()
         default:
             "Pass"
         }
+*/
+        if !json {
+            XCTFail()
+        }
+
+        var json2 = JSONValue(validJSONData, options:.MutableContainers )
+
+        if json != json2 {
+            XCTFail()
+        }
+
+        json2["title"] = JSONValue("changed")
+
+        if json == json2 {
+            XCTFail()
+        }
     }
 
     func testJSONValueDoesProduceValidValueWithCorrectKeyPath() {
         let json = JSONValue(validJSONData)
-        
+        NSLog( "%@", json.obj as NSObject )
+
         let stringValue = json["title"].string
         let urlValue = json["url"].url
         let numberValue = json["id"].number
@@ -47,9 +65,13 @@ class SwiftyJSONTests: XCTestCase {
         XCTAssert(urlValue == NSURL(string: "https://api.github.com/repos/lingoer/SwiftyJSON/issues/2"))
         XCTAssert(numberValue == 36170434)
         XCTAssert(boolValue == false)
-        XCTAssert(nullValue == JSONValue.JNull)
+//        XCTAssert(nullValue == JSONValue.JNull)
+        if nullValue {
+            XCTFail()
+        }
         XCTAssert(arrayValue != nil)
         XCTAssert(objectValue != nil)
+
     }
     
     func testJSONString() {

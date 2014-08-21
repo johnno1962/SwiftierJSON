@@ -1,3 +1,9 @@
+#SwiftierJSON
+This repo is a clone of lingoer's handy [SwiftyJSON](https://github.com/lingoer/SwiftyJSON) repo
+for processing JSON data in Swift, rewritten to use the objects returned by the JSON parser rather
+then converting the data into Swift data structures using a complex enum. It requires less memeory and 
+should be a little faster for large messages. It's backward compatible, the original README follows:
+
 #SwiftyJSON
 SwiftyJSON makes it easy to deal with JSON data in Swift.
 ##Why is the typical JSON handling in Swift NOT good?

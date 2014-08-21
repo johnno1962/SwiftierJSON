@@ -1,6 +1,6 @@
 //  SwiftyJSON.swift
 //
-//  Copyright (c) 2014年 Ruoyu Fu, Denis Lebedev.
+//  Copyright (c) 2014年 Ruoyu Fu, Denis Lebedev, John Holdsworth
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -22,225 +22,203 @@
 
 import Foundation
 
+struct JSONValue {
 
-enum JSONValue {
-
-    
-    case JNumber(NSNumber)
-    case JString(String)
-    case JBool(Bool)
-    case JNull
-    case JArray(Array<JSONValue>)
-    case JObject(Dictionary<String,JSONValue>)
-    case JInvalid(NSError)
+    var obj: AnyObject!
 
     var string: String? {
-        switch self {
-        case .JString(let value):
+        if let value = obj as? NSString {
             return value
-        default:
+        } else if let value = obj as? NSNumber {
+            return value.stringValue
+        } else {
             return nil
         }
     }
   
     var url: NSURL? {
-        switch self {
-        case .JString(let value):
+        if let value = obj as? NSString {
             return NSURL(string: value)
-        default:
+        } else {
             return nil
         }
     }
+
     var number: NSNumber? {
-        switch self {
-        case .JNumber(let value):
+        if let value = obj as? NSNumber {
             return value
-        default:
+        } else {
             return nil
         }
     }
     
     var double: Double? {
-        switch self {
-        case .JNumber(let value):
+        if let value = obj as? NSNumber {
             return value.doubleValue
-        case .JString(let value):
-            return (value as NSString).doubleValue
-        default:
+        } else if let value = obj as? NSString {
+            return value.doubleValue
+        } else {
             return nil
         }
     }
     
     var integer: Int? {
-        switch self {
-        case .JBool(let value):
-            return Int(value)
-        case .JNumber(let value):
+        if let value = obj as? NSNumber {
             return value.integerValue
-        case .JString(let value):
-            return (value as NSString).integerValue
-        default:
+        } else if let value = obj as? NSString {
+            return value.integerValue
+        } else {
             return nil
         }
     }
     
     var bool: Bool? {
-        switch self {
-        case .JBool(let value):
-            return value
-        case .JNumber(let value):
+        if let value = obj as? NSNumber {
             return value.boolValue
-        case .JString(let value):
-            return (value as NSString).boolValue
-        default:
+        } else if let value = obj as? NSString {
+            return value.boolValue
+        } else {
             return nil
         }
     }
     
     var array: Array<JSONValue>? {
-        switch self {
-        case .JArray(let value):
-            return value
-        default:
+        if let value = obj as? NSArray {
+            return map( value ) { JSONValue($0) }
+        } else {
             return nil
         }
     }
     
     var object: Dictionary<String, JSONValue>? {
-        switch self {
-        case .JObject(let value):
-            return value
-        default:
+        if let object = obj as? NSDictionary {
+            var out = Dictionary<String, JSONValue>()
+            for ( key, value ) in object {
+                out[key as String] = JSONValue(value)
+            }
+            return out
+        } else {
             return nil
         }
     }
-    
+
     var first: JSONValue? {
-        switch self {
-        case .JArray(let jsonArray) where jsonArray.count > 0:
-            return jsonArray[0]
-        case .JObject(let jsonDictionary) where jsonDictionary.count > 0 :
-            let (_, value) = jsonDictionary[jsonDictionary.startIndex]
-            return value
-        default:
-            return nil
+        if let jsonArray = obj as? NSArray {
+            if jsonArray.count > 0 {
+                return JSONValue( jsonArray[0] )
+            }
         }
+        if let jsonDictionary = obj as? NSDictionary {
+            for (_, value) in jsonDictionary {
+                return JSONValue( value )
+            }
+        }
+        return nil
     }
     
     var last: JSONValue? {
-        switch self {
-        case .JArray(let jsonArray) where jsonArray.count > 0:
-            return jsonArray[jsonArray.count-1]
-        case .JObject(let jsonDictionary) where jsonDictionary.count > 0 :
-            let (_, value) = jsonDictionary[jsonDictionary.endIndex]
-            return value
-        default:
-            return nil
-        }
-    }
-    
-    init (_ data: NSData!){
-        if let value = data{
-            var error:NSError? = nil
-            if let jsonObject : AnyObject = NSJSONSerialization.JSONObjectWithData(data, options: nil, error: &error) {
-                self = JSONValue(jsonObject)
-            }else{
-                self = JSONValue.JInvalid(NSError(domain: "JSONErrorDomain", code: 1001, userInfo: [NSLocalizedDescriptionKey:"JSON Parser Error: Invalid Raw JSON Data"]))
+        if let jsonArray = obj as? NSArray {
+            if jsonArray.count > 0 {
+                return JSONValue( jsonArray[jsonArray.count-1] )
             }
-        }else{
-            self = JSONValue.JInvalid(NSError(domain: "JSONErrorDomain", code: 1000, userInfo: [NSLocalizedDescriptionKey:"JSON Init Error: Invalid Value Passed In init()"]))
         }
+        if let jsonDictionary = obj as? NSDictionary {
+            var out: AnyObject!
+            for (_, value) in jsonDictionary {
+                out = value
+            }
+            if out {
+                return JSONValue( out )
+            }
+        }
+        return nil
+    }
 
+    init (_ data: NSData!, options: NSJSONReadingOptions = nil ) {
+        if let value = data {
+            var error:NSError? = nil
+            obj = NSJSONSerialization.JSONObjectWithData(data, options: options, error: &error)
+            if !obj {
+                obj = NSError(domain: "JSONErrorDomain", code: 1001, userInfo: [NSLocalizedDescriptionKey:"JSON Parser Error: Invalid Raw JSON Data"])
+            }
+        } else {
+            obj = NSError(domain: "JSONErrorDomain", code: 1000, userInfo: [NSLocalizedDescriptionKey:"JSON Init Error: Invalid Value Passed In init()"])
+        }
     }
     
     init (_ rawObject: AnyObject) {
-        switch rawObject {
-        case let value as NSNumber:
-            if String.fromCString(value.objCType) == "c" {
-                self = .JBool(value.boolValue)
-                return
-            }
-            self = .JNumber(value)
-        case let value as NSString:
-            self = .JString(value)
-        case let value as NSNull:
-            self = .JNull
-        case let value as NSArray:
-            var jsonValues = [JSONValue]()
-            for possibleJsonValue : AnyObject in value {
-                let jsonValue = JSONValue(possibleJsonValue)
-                if  jsonValue {
-                    jsonValues.append(jsonValue)
-                }
-            }
-            self = .JArray(jsonValues)
-        case let value as NSDictionary:
-            var jsonObject = Dictionary<String, JSONValue>()
-            for (possibleJsonKey : AnyObject, possibleJsonValue : AnyObject) in value {
-                if let key = possibleJsonKey as? NSString {
-                    let jsonValue = JSONValue(possibleJsonValue)
-                    if jsonValue {
-                        jsonObject[key] = jsonValue
-                    }
-                }
-            }
-            self = .JObject(jsonObject)
-        default:
-            self = .JInvalid(NSError(domain: "JSONErrorDomain", code: 1000, userInfo: [NSLocalizedDescriptionKey:"JSON Init Error: Invalid Value Passed In init()"]))
+        obj = rawObject
+        if ( !obj ) {
+            obj = NSError(domain: "JSONErrorDomain", code: 1000, userInfo: [NSLocalizedDescriptionKey:"JSON Init Error: Invalid Value Passed In init()"])
         }
     }
 
     subscript(index: Int) -> JSONValue {
         get {
-            switch self {
-            case .JArray(let jsonArray) where jsonArray.count > index:
-                return jsonArray[index]
-            case .JInvalid(let error):
-                if let userInfo = error.userInfo{
+            if let jsonArray = obj as? NSArray {
+                return JSONValue(jsonArray[index])
+            }
+            if let error = obj as? NSError {
+                if let userInfo = error.userInfo {
                     if let breadcrumb = userInfo["JSONErrorBreadCrumbKey"] as? NSString{
                         let newBreadCrumb = (breadcrumb as String) + "/\(index)"
                         let newUserInfo = [NSLocalizedDescriptionKey: "JSON Keypath Error: Incorrect Keypath \"\(newBreadCrumb)\"",
                                            "JSONErrorBreadCrumbKey": newBreadCrumb]
-                        return JSONValue.JInvalid(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
+                        return JSONValue(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
                     }
                 }
                 return self
-            default:
+            } else {
                 let breadcrumb = "\(index)"
                 let newUserInfo = [NSLocalizedDescriptionKey: "JSON Keypath Error: Incorrect Keypath \"\(breadcrumb)\"",
                                     "JSONErrorBreadCrumbKey": breadcrumb]
-                return JSONValue.JInvalid(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
+                return JSONValue(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
+            }
+        }
+        set {
+            if let jsonArray = obj as? NSMutableArray {
+                if ( index < jsonArray.count ) {
+                    jsonArray[index] = newValue.obj
+                }
+                else if ( index == jsonArray.count ) {
+                    jsonArray.addObject( newValue.obj )
+                }
             }
         }
     }
     
     subscript(key: String) -> JSONValue {
         get {
-            switch self {
-            case .JObject(let jsonDictionary):
-                if let value = jsonDictionary[key] {
-                    return value
-                }else {
+            if let jsonDictionary = obj as? NSDictionary {
+                if let value: AnyObject = jsonDictionary[key] {
+                    return JSONValue(value)
+                } else {
                     let breadcrumb = "\(key)"
                     let newUserInfo = [NSLocalizedDescriptionKey: "JSON Keypath Error: Incorrect Keypath \"\(breadcrumb)\"",
                                         "JSONErrorBreadCrumbKey": breadcrumb]
-                    return JSONValue.JInvalid(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
+                    return JSONValue(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
                 }
-            case .JInvalid(let error):
-                if let userInfo = error.userInfo{
+            }
+            else if let error = obj as? NSError {
+                if let userInfo = error.userInfo {
                     if let breadcrumb = userInfo["JSONErrorBreadCrumbKey"] as? NSString{
                         let newBreadCrumb = (breadcrumb as String) + "/\(key)"
                         let newUserInfo = [NSLocalizedDescriptionKey: "JSON Keypath Error: Incorrect Keypath \"\(newBreadCrumb)\"",
                             "JSONErrorBreadCrumbKey": newBreadCrumb]
-                        return JSONValue.JInvalid(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
+                        return JSONValue(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
                     }
                 }
                 return self
-            default:
+            } else {
                 let breadcrumb = "/\(key)"
                 let newUserInfo = [NSLocalizedDescriptionKey: "JSON Keypath Error: Incorrect Keypath \"\(breadcrumb)\"",
                     "JSONErrorBreadCrumbKey": breadcrumb]
-                return JSONValue.JInvalid(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
+                return JSONValue(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
+            }
+        }
+        set {
+            if let jsonDictionary = obj as? NSMutableDictionary {
+                jsonDictionary[key] = newValue.obj
             }
         }
     }
@@ -248,59 +226,64 @@ enum JSONValue {
 
 extension JSONValue: Printable {
     var description: String {
-        switch self {
-        case .JInvalid(let error):
+        if let error = obj as? NSError {
             return error.localizedDescription
-        default:
+        }
+        else {
             return _printableString("")
         }
     }
     
     var rawJSONString: String {
-        switch self {
-        case .JNumber(let value):
-            return "\(value)"
-        case .JBool(let value):
-            return "\(value)"
-        case .JString(let value):
-            let jsonAbleString = value.stringByReplacingOccurrencesOfString("\"", withString: "\\\"", options: NSStringCompareOptions.CaseInsensitiveSearch, range: nil)
+        if let value = obj as? NSNumber {
+            if String.fromCString(value.objCType) == "c" {
+                return "\(value.boolValue)"
+            } else {
+                return "\(value)"
+            }
+        }
+        else if let value = obj as? NSString {
+            let jsonAbleString = value.stringByReplacingOccurrencesOfString("\"", withString: "\\\"", options: NSStringCompareOptions.CaseInsensitiveSearch, range:NSMakeRange(0, value.length))
             return "\"\(jsonAbleString)\""
-        case .JNull:
+        }
+        else if let value = obj as? NSNull {
             return "null"
-        case .JArray(let array):
+        }
+        else if let array = obj as? NSArray {
             var arrayString = ""
             for (index, value) in enumerate(array) {
                 if index != array.count - 1 {
-                    arrayString += "\(value.rawJSONString),"
+                    arrayString += "\(JSONValue(value).rawJSONString),"
                 }else{
-                    arrayString += "\(value.rawJSONString)"
+                    arrayString += "\(JSONValue(value).rawJSONString)"
                 }
             }
             return "[\(arrayString)]"
-        case .JObject(let object):
+        }
+        else if let object = obj as? NSDictionary {
             var objectString = ""
             var (index, count) = (0, object.count)
             for (key, value) in object {
                 if index != count - 1 {
-                    objectString += "\"\(key)\":\(value.rawJSONString),"
+                    objectString += "\"\(key)\":\(JSONValue(value).rawJSONString),"
                 } else {
-                    objectString += "\"\(key)\":\(value.rawJSONString)"
+                    objectString += "\"\(key)\":\(JSONValue(value).rawJSONString)"
                 }
                 index += 1
             }
             return "{\(objectString)}"
-        case .JInvalid:
+        }
+        else {//if let error = obj as? NSError {
             return "INVALID_JSON_VALUE"
-            }
-  }
+        }
+    }
     
     func _printableString(indent: String) -> String {
-        switch self {
-        case .JObject(let object):
+        if let object = obj as? NSDictionary {
             var objectString = "{\n"
             var index = 0
             for (key, value) in object {
-                let valueString = value._printableString(indent + "  ")
+                let valueString = JSONValue(value)._printableString(indent + "  ")
                 if index != object.count - 1 {
                     objectString += "\(indent)  \"\(key)\":\(valueString),\n"
                 } else {
@@ -310,10 +293,11 @@ extension JSONValue: Printable {
             }
             objectString += "\(indent)}"
             return objectString
-        case .JArray(let array):
+        }
+        else if let array = obj as? NSArray {
             var arrayString = "[\n"
             for (index, value) in enumerate(array) {
-                let valueString = value._printableString(indent + "  ")
+                let valueString = JSONValue(value)._printableString(indent + "  ")
                 if index != array.count - 1 {
                     arrayString += "\(indent)  \(valueString),\n"
                 }else{
@@ -322,7 +306,7 @@ extension JSONValue: Printable {
             }
             arrayString += "\(indent)]"
             return arrayString
-        default:
+        } else {
             return rawJSONString
         }
     }
@@ -330,10 +314,16 @@ extension JSONValue: Printable {
 
 extension JSONValue: BooleanType {
     var boolValue: Bool {
-        switch self {
-        case .JInvalid:
+        if let error = obj as? NSError {
             return false
-        default:
+        }
+        else if let error = obj as? NSNull {
+            return false
+        }
+        else if !obj {
+            return false
+        }
+        else {
             return true
         }
     }
@@ -344,50 +334,5 @@ extension JSONValue : Equatable {
 }
 
 func ==(lhs: JSONValue, rhs: JSONValue) -> Bool {
-    switch lhs {
-    case .JNumber(let lvalue):
-        switch rhs {
-        case .JNumber(let rvalue):
-            return rvalue == lvalue
-        default:
-            return false
-        }
-    case .JString(let lvalue):
-        switch rhs {
-        case .JString(let rvalue):
-            return rvalue == lvalue
-        default:
-            return false
-        }
-    case .JBool(let lvalue):
-        switch rhs {
-        case .JBool(let rvalue):
-            return rvalue == lvalue
-        default:
-            return false
-        }
-    case .JNull:
-        switch rhs {
-        case .JNull:
-            return true
-        default:
-            return false
-        }
-    case .JArray(let lvalue):
-        switch rhs {
-        case .JArray(let rvalue):
-            return rvalue == lvalue
-        default:
-            return false
-        }
-    case .JObject(let lvalue):
-        switch rhs {
-        case .JObject(let rvalue):
-            return rvalue == lvalue
-        default:
-            return false
-        }
-    default:
-        return false
-    }
+    return lhs.obj.isEqual(rhs.obj)
 }
