@@ -12,7 +12,7 @@
 	<dict>
 		<key>91E933855634EA4FD90AB0D4C1612EBDD1E819C4</key>
 		<string>https://github.com/johnno1962/SwiftierJSON.git</string>
-		<key>E0A160A5-C602-42DC-8A38-C2994D32AAAE</key>
+		<key>C861FC00CEE0F6A6BE81FCFF6785FAA78C58EBB3</key>
 		<string>ssh://github.com/garnett/SwiftyJSON.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
@@ -21,7 +21,7 @@
 	<dict>
 		<key>91E933855634EA4FD90AB0D4C1612EBDD1E819C4</key>
 		<string>../..</string>
-		<key>E0A160A5-C602-42DC-8A38-C2994D32AAAE</key>
+		<key>C861FC00CEE0F6A6BE81FCFF6785FAA78C58EBB3</key>
 		<string>../../../SwiftyJSON</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
@@ -44,7 +44,7 @@
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>E0A160A5-C602-42DC-8A38-C2994D32AAAE</string>
+			<string>C861FC00CEE0F6A6BE81FCFF6785FAA78C58EBB3</string>
 			<key>IDESourceControlWCCName</key>
 			<string>SwiftyJSON</string>
 		</dict>

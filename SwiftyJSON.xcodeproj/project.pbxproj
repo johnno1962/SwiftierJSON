@@ -19,7 +19,6 @@
 		2E4FF01C19575D1100351305 /* SwiftyJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 2E4FEFE019575BE100351305 /* SwiftyJSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2E4FF01D19575D2D00351305 /* SwiftyJSONTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4FEFF919575C3200351305 /* SwiftyJSONTests.swift */; };
 		2E4FF01E19575D9400351305 /* Valid.JSON in Resources */ = {isa = PBXBuildFile; fileRef = 2E4FEFFA19575C3200351305 /* Valid.JSON */; };
-		BB8EEE0A19A637720090A4F4 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = BB8EEE0919A637720090A4F4 /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -320,7 +319,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BB8EEE0A19A637720090A4F4 /* README.md in Sources */,
 				2E4FEFF819575C2600351305 /* SwiftyJSON.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

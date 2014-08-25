@@ -22,11 +22,11 @@
 
 import Foundation
 
-struct JSONValue {
+public struct JSONValue {
 
-    var obj: AnyObject!
+    public var obj: AnyObject!
 
-    var string: String? {
+    public var string: String? {
         if let value = obj as? NSString {
             return value
         } else if let value = obj as? NSNumber {
@@ -36,7 +36,7 @@ struct JSONValue {
         }
     }
   
-    var url: NSURL? {
+    public var url: NSURL? {
         if let value = obj as? NSString {
             return NSURL(string: value)
         } else {
@@ -44,7 +44,7 @@ struct JSONValue {
         }
     }
 
-    var number: NSNumber? {
+    public var number: NSNumber? {
         if let value = obj as? NSNumber {
             return value
         } else {
@@ -52,7 +52,7 @@ struct JSONValue {
         }
     }
     
-    var double: Double? {
+    public var double: Double? {
         if let value = obj as? NSNumber {
             return value.doubleValue
         } else if let value = obj as? NSString {
@@ -62,7 +62,7 @@ struct JSONValue {
         }
     }
     
-    var integer: Int? {
+    public var integer: Int? {
         if let value = obj as? NSNumber {
             return value.integerValue
         } else if let value = obj as? NSString {
@@ -72,7 +72,7 @@ struct JSONValue {
         }
     }
     
-    var bool: Bool? {
+    public var bool: Bool? {
         if let value = obj as? NSNumber {
             return value.boolValue
         } else if let value = obj as? NSString {
@@ -82,7 +82,7 @@ struct JSONValue {
         }
     }
     
-    var array: Array<JSONValue>? {
+    public var array: Array<JSONValue>? {
         if let value = obj as? NSArray {
             return map( value ) { JSONValue($0) }
         } else {
@@ -90,7 +90,7 @@ struct JSONValue {
         }
     }
     
-    var object: Dictionary<String, JSONValue>? {
+    public var object: Dictionary<String, JSONValue>? {
         if let object = obj as? NSDictionary {
             var out = Dictionary<String, JSONValue>()
             for ( key, value ) in object {
@@ -102,7 +102,7 @@ struct JSONValue {
         }
     }
 
-    var first: JSONValue? {
+    public var first: JSONValue? {
         if let jsonArray = obj as? NSArray {
             if jsonArray.count > 0 {
                 return JSONValue( jsonArray[0] )
@@ -116,7 +116,7 @@ struct JSONValue {
         return nil
     }
     
-    var last: JSONValue? {
+    public var last: JSONValue? {
         if let jsonArray = obj as? NSArray {
             if jsonArray.count > 0 {
                 return JSONValue( jsonArray[jsonArray.count-1] )
@@ -127,18 +127,18 @@ struct JSONValue {
             for (_, value) in jsonDictionary {
                 out = value
             }
-            if out {
+            if out != nil {
                 return JSONValue( out )
             }
         }
         return nil
     }
 
-    init (_ data: NSData!, options: NSJSONReadingOptions = nil ) {
+    public init (_ data: NSData!, options: NSJSONReadingOptions = nil ) {
         if let value = data {
             var error:NSError? = nil
             obj = NSJSONSerialization.JSONObjectWithData(data, options: options, error: &error)
-            if !obj {
+            if obj == nil {
                 obj = NSError(domain: "JSONErrorDomain", code: 1001, userInfo: [NSLocalizedDescriptionKey:"JSON Parser Error: Invalid Raw JSON Data"])
             }
         } else {
@@ -146,14 +146,14 @@ struct JSONValue {
         }
     }
     
-    init (_ rawObject: AnyObject) {
+    public init (_ rawObject: AnyObject) {
         obj = rawObject
-        if ( !obj ) {
+        if obj == nil {
             obj = NSError(domain: "JSONErrorDomain", code: 1000, userInfo: [NSLocalizedDescriptionKey:"JSON Init Error: Invalid Value Passed In init()"])
         }
     }
 
-    subscript(index: Int) -> JSONValue {
+    public subscript(index: Int) -> JSONValue {
         get {
             if let jsonArray = obj as? NSArray {
                 return JSONValue(jsonArray[index])
@@ -187,7 +187,7 @@ struct JSONValue {
         }
     }
     
-    subscript(key: String) -> JSONValue {
+    public subscript(key: String) -> JSONValue {
         get {
             if let jsonDictionary = obj as? NSDictionary {
                 if let value: AnyObject = jsonDictionary[key] {
@@ -225,7 +225,7 @@ struct JSONValue {
 }
 
 extension JSONValue: Printable {
-    var description: String {
+    public var description: String {
         if let error = obj as? NSError {
             return error.localizedDescription
         }
@@ -234,7 +234,7 @@ extension JSONValue: Printable {
         }
     }
     
-    var rawJSONString: String {
+    public var rawJSONString: String {
         if let value = obj as? NSNumber {
             if String.fromCString(value.objCType) == "c" {
                 return "\(value.boolValue)"
@@ -313,14 +313,14 @@ extension JSONValue: Printable {
 }
 
 extension JSONValue: BooleanType {
-    var boolValue: Bool {
+    public var boolValue: Bool {
         if let error = obj as? NSError {
             return false
         }
         else if let error = obj as? NSNull {
             return false
         }
-        else if !obj {
+        else if obj == nil {
             return false
         }
         else {
@@ -333,6 +333,6 @@ extension JSONValue : Equatable {
     
 }
 
-func ==(lhs: JSONValue, rhs: JSONValue) -> Bool {
+public func ==(lhs: JSONValue, rhs: JSONValue) -> Bool {
     return lhs.obj.isEqual(rhs.obj)
 }
