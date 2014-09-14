@@ -22,6 +22,49 @@
 
 import Foundation
 
+private class JSONParent {
+
+    var parent: JSONValue
+
+    init( parent: JSONValue ) {
+        self.parent = parent
+    }
+
+    func vivify( child: AnyObject ) -> AnyObject {
+        return NSNull()
+    }
+}
+
+private class JSONDictionaryParent : JSONParent {
+
+    var key: String
+
+    init( parent: JSONValue, key: String ) {
+        self.key = key
+        super.init( parent: parent )
+    }
+
+    override func vivify( child: AnyObject ) -> AnyObject {
+        parent[key] = JSONValue( child )
+        return child
+    }
+}
+
+private class JSONArrayParent : JSONParent {
+
+    var index: Int
+
+    init( parent: JSONValue, index: Int ) {
+        self.index = index
+        super.init( parent: parent )
+    }
+
+    override func vivify( child: AnyObject ) -> AnyObject {
+        parent[index] = JSONValue( child )
+        return child
+    }
+}
+
 public struct JSONValue {
 
     public var obj: AnyObject!
@@ -156,26 +199,16 @@ public struct JSONValue {
     public subscript(index: Int) -> JSONValue {
         get {
             if let jsonArray = obj as? NSArray {
-                return JSONValue(jsonArray[index])
-            }
-            if let error = obj as? NSError {
-                if let userInfo = error.userInfo {
-                    if let breadcrumb = userInfo["JSONErrorBreadCrumbKey"] as? NSString{
-                        let newBreadCrumb = (breadcrumb as String) + "/\(index)"
-                        let newUserInfo = [NSLocalizedDescriptionKey: "JSON Keypath Error: Incorrect Keypath \"\(newBreadCrumb)\"",
-                                           "JSONErrorBreadCrumbKey": newBreadCrumb]
-                        return JSONValue(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
-                    }
+                if ( index < jsonArray.count ) {
+                    return JSONValue(jsonArray[index])
                 }
-                return self
-            } else {
-                let breadcrumb = "\(index)"
-                let newUserInfo = [NSLocalizedDescriptionKey: "JSON Keypath Error: Incorrect Keypath \"\(breadcrumb)\"",
-                                    "JSONErrorBreadCrumbKey": breadcrumb]
-                return JSONValue(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
             }
+            return JSONValue( JSONArrayParent(parent: self, index: index) )
         }
         set {
+            if let jsonParent = obj as? JSONParent {
+                obj = jsonParent.vivify(NSMutableArray())
+            }
             if let jsonArray = obj as? NSMutableArray {
                 if ( index < jsonArray.count ) {
                     jsonArray[index] = newValue.obj
@@ -192,31 +225,14 @@ public struct JSONValue {
             if let jsonDictionary = obj as? NSDictionary {
                 if let value: AnyObject = jsonDictionary[key] {
                     return JSONValue(value)
-                } else {
-                    let breadcrumb = "\(key)"
-                    let newUserInfo = [NSLocalizedDescriptionKey: "JSON Keypath Error: Incorrect Keypath \"\(breadcrumb)\"",
-                                        "JSONErrorBreadCrumbKey": breadcrumb]
-                    return JSONValue(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
                 }
             }
-            else if let error = obj as? NSError {
-                if let userInfo = error.userInfo {
-                    if let breadcrumb = userInfo["JSONErrorBreadCrumbKey"] as? NSString{
-                        let newBreadCrumb = (breadcrumb as String) + "/\(key)"
-                        let newUserInfo = [NSLocalizedDescriptionKey: "JSON Keypath Error: Incorrect Keypath \"\(newBreadCrumb)\"",
-                            "JSONErrorBreadCrumbKey": newBreadCrumb]
-                        return JSONValue(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
-                    }
-                }
-                return self
-            } else {
-                let breadcrumb = "/\(key)"
-                let newUserInfo = [NSLocalizedDescriptionKey: "JSON Keypath Error: Incorrect Keypath \"\(breadcrumb)\"",
-                    "JSONErrorBreadCrumbKey": breadcrumb]
-                return JSONValue(NSError(domain: "JSONErrorDomain", code: 1002, userInfo: newUserInfo))
-            }
+            return JSONValue( JSONDictionaryParent(parent: self, key: key) )
         }
         set {
+            if let jsonParent = obj as? JSONParent {
+                obj = jsonParent.vivify(NSMutableDictionary())
+            }
             if let jsonDictionary = obj as? NSMutableDictionary {
                 jsonDictionary[key] = newValue.obj
             }
@@ -314,7 +330,10 @@ extension JSONValue: Printable {
 
 extension JSONValue: BooleanType {
     public var boolValue: Bool {
-        if let error = obj as? NSError {
+        if let error = obj as? JSONParent {
+            return false
+        }
+        else if let error = obj as? NSError {
             return false
         }
         else if let error = obj as? NSNull {

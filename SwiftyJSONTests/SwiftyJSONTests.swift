@@ -158,5 +158,52 @@ class SwiftyJSONTests: XCTestCase {
         let JSON = JSONValue("http://example.com/")
         XCTAssertEqual("\"http://example.com/\"", JSON.description, "Wrong pretty value")
     }
-  
+
+    func testWritable() {
+        var JSON = JSONValue(NSMutableDictionary())
+        JSON["milestone"]["creator"]["login"] = JSONValue( "lingoer")
+        var msg = JSON.rawJSONString
+        XCTAssertEqual(msg,"{\"milestone\":{\"creator\":{\"login\":\"lingoer\"}}}", "wrong build")
+    }
+
+    func testBuilding() {
+        var JSON = JSONValue(NSMutableDictionary())
+
+        JSON["url"] = JSONValue("https://api.github.com/repos/lingoer/SwiftyJSON/issues/2")
+        JSON["id"] = JSONValue(36170434)
+        JSON["number"] = JSONValue(2)
+        JSON["title"] = JSONValue("How do I verify SwiftyJSON workS?")
+        JSON["user"]["login"] = JSONValue("garnett")
+        JSON["user"]["id"] = JSONValue(829783)
+        JSON["user"]["avatar_url"] = JSONValue("https://avatars.githubusercontent.com/u/829783?" )
+        JSON["user"]["type"] = JSONValue("User")
+        JSON["user"]["site_admin"] = JSONValue(false)
+        JSON["labels"][0] = JSONValue(NSMutableArray())
+        JSON["labels"][1] = JSONValue(NSMutableArray())
+        JSON["state"] = JSONValue("open")
+        JSON["assignee"] = JSONValue(NSNull())
+        JSON["milestone"]["url"] = JSONValue( "https://api.github.com/repos/lingoer/SwiftyJSON/milestones/1" )
+        JSON["milestone"]["labels_url"] = JSONValue( "https://api.github.com/repos/lingoer/SwiftyJSON/milestones/1/labels" )
+        JSON["milestone"]["id"] = JSONValue(696908)
+        JSON["milestone"]["number"] = JSONValue(1)
+        JSON["milestone"]["title"] = JSONValue("release 0.1")
+        JSON["milestone"]["description"] = JSONValue( "Add a Demo!\r\nBranch out a develop branch, and may be, Git Flow" )
+        JSON["milestone"]["creator"]["login"] = JSONValue( "lingoer")
+        JSON["milestone"]["creator"]["id"] = JSONValue(3095758)
+        JSON["milestone"]["creator"]["avatar_url"] = JSONValue( "https://avatars.githubusercontent.com/u/3095758?" )
+        JSON["milestone"]["creator"]["gravatar_id"] = JSONValue( "8ccacafa7f3e7f6a07cdc8d9f1f30471" )
+        JSON["milestone"]["creator"]["type"] = JSONValue( "User" )
+        JSON["milestone"]["creator"]["site_admin"] = JSONValue(false)
+        JSON["milestone"]["open_issues"] = JSONValue(1)
+        JSON["milestone"]["closed_issues"] = JSONValue(0)
+        JSON["milestone"]["state"] = JSONValue("open")
+        JSON["milestone"]["created_at"] = JSONValue("2014-06-20T15:51:59Z")
+        JSON["milestone"]["due_on"] = JSONValue(NSNull())
+        JSON["comments"] = JSONValue(2)
+        JSON["updated_at"] = JSONValue("2014-06-20T16:21:05Z")
+        JSON["body"] = JSONValue("I've cloned the source, run Example project and apparently it's empty - no unit tests, no demo :zzz: ")
+        JSON["closed_by"] = JSONValue(NSNull())
+
+        XCTAssertEqual(JSONValue(validJSONData), JSON, "Wrong built value")
+    }
 }

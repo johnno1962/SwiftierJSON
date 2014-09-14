@@ -2,7 +2,16 @@
 This repo is a cheeky rewrite of lingoer's excellent [SwiftyJSON](https://github.com/lingoer/SwiftyJSON) repo
 for processing JSON data in Swift altered to use the objects returned by the JSON parser rather than
 converting all data into Swift representation using an enum. It requires less memory and should
-be a little faster for large messages. It's backward compatible, the original README follows:
+be a little faster for large messages.
+
+It's is backward compatible but contains the additional feature of the JSON being writable so you
+can use it to construct messages (intermediate nodes are "auto-vivified"):
+
+var JSON = JSONValue(NSMutableDictionary())
+JSON["milestone"]["creator"]["login"] = JSONValue( "lingoer")
+var msg = JSON.rawJSONString
+
+For more details, see the UNIT tests. The original README follows:
 
 #SwiftyJSON
 SwiftyJSON makes it easy to deal with JSON data in Swift.
