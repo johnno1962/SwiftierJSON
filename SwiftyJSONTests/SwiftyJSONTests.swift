@@ -201,7 +201,7 @@ class SwiftyJSONTests: XCTestCase {
         JSON["milestone"]["due_on"] = JSONValue(NSNull())
         JSON["comments"] = JSONValue(2)
         JSON["updated_at"] = JSONValue("2014-06-20T16:21:05Z")
-        JSON["body"] = JSONValue("I've cloned the source, run Example project and apparently it's empty - no unit tests, no demo :zzz: ")
+        JSON["body"] = JSONValue("I've cloned the source, run Example project and apparently it's empty - no unit tests, no demo :zzz: ££")
         JSON["closed_by"] = JSONValue(NSNull())
 
         XCTAssertEqual(JSONValue(validJSONData), JSON, "Wrong built value")
