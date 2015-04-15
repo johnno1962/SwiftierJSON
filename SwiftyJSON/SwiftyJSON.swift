@@ -71,7 +71,7 @@ public struct JSONValue {
 
     public var string: String? {
         if let value = obj as? NSString {
-            return value
+            return value as String
         } else if let value = obj as? NSNumber {
             return value.stringValue
         } else {
@@ -81,7 +81,7 @@ public struct JSONValue {
   
     public var url: NSURL? {
         if let value = obj as? NSString {
-            return NSURL(string: value)
+            return NSURL(string: value as String)
         } else {
             return nil
         }
@@ -137,7 +137,7 @@ public struct JSONValue {
         if let object = obj as? NSDictionary {
             var out = Dictionary<String, JSONValue>()
             for ( key, value ) in object {
-                out[key as String] = JSONValue(value)
+                out[key as! String] = JSONValue(value)
             }
             return out
         } else {

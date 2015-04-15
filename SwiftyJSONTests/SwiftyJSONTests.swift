@@ -51,7 +51,7 @@ class SwiftyJSONTests: XCTestCase {
 
     func testJSONValueDoesProduceValidValueWithCorrectKeyPath() {
         let json = JSONValue(validJSONData)
-        NSLog( "%@", json.obj as NSObject )
+        NSLog( "%@", json.obj as! NSObject )
 
         let stringValue = json["title"].string
         let urlValue = json["url"].url
@@ -81,7 +81,7 @@ class SwiftyJSONTests: XCTestCase {
   
     func testJSONURL() {
         let JSON = JSONValue("http://example.com/")
-        XCTAssertEqual(JSON.url!, NSURL(string: "http://example.com/"), "Wrong unpacked value")
+        XCTAssertEqual(JSON.url!, NSURL(string: "http://example.com/")!, "Wrong unpacked value")
     }
   
     func testJSONNumber() {
