@@ -162,7 +162,7 @@ class SwiftyJSONTests: XCTestCase {
     func testWritable() {
         var JSON = JSONValue(NSMutableDictionary())
         JSON["milestone"]["creator"]["login"] = JSONValue( "lingoer")
-        var msg = JSON.rawJSONString
+        let msg = JSON.rawJSONString
         XCTAssertEqual(msg,"{\"milestone\":{\"creator\":{\"login\":\"lingoer\"}}}", "wrong build")
     }
 

@@ -127,7 +127,7 @@ public struct JSONValue {
     
     public var array: Array<JSONValue>? {
         if let value = obj as? NSArray {
-            return map( value ) { JSONValue($0) }
+            return value.map { JSONValue($0) }
         } else {
             return nil
         }
@@ -177,10 +177,13 @@ public struct JSONValue {
         return nil
     }
 
-    public init (_ data: NSData!, options: NSJSONReadingOptions = nil ) {
-        if let value = data {
-            var error:NSError? = nil
-            obj = NSJSONSerialization.JSONObjectWithData(data, options: options, error: &error)
+    public init (_ data: NSData!, options: NSJSONReadingOptions? = nil ) {
+        if data != nil {
+            do {
+                obj = try NSJSONSerialization.JSONObjectWithData(data, options: options ?? NSJSONReadingOptions(rawValue: 0) )
+            } catch _ as NSError {
+                obj = nil
+            }
             if obj == nil {
                 obj = NSError(domain: "JSONErrorDomain", code: 1001, userInfo: [NSLocalizedDescriptionKey:"JSON Parser Error: Invalid Raw JSON Data"])
             }
@@ -240,7 +243,7 @@ public struct JSONValue {
     }
 }
 
-extension JSONValue: Printable {
+extension JSONValue: CustomStringConvertible {
     public var description: String {
         if let error = obj as? NSError {
             return error.localizedDescription
@@ -262,12 +265,12 @@ extension JSONValue: Printable {
             let jsonAbleString = value.stringByReplacingOccurrencesOfString("\"", withString: "\\\"", options: NSStringCompareOptions.CaseInsensitiveSearch, range:NSMakeRange(0, value.length))
             return "\"\(jsonAbleString)\""
         }
-        else if let value = obj as? NSNull {
+        else if let _ = obj as? NSNull {
             return "null"
         }
         else if let array = obj as? NSArray {
             var arrayString = ""
-            for (index, value) in enumerate(array) {
+            for (index, value) in array.enumerate() {
                 if index != array.count - 1 {
                     arrayString += "\(JSONValue(value).rawJSONString),"
                 }else{
@@ -312,7 +315,7 @@ extension JSONValue: Printable {
         }
         else if let array = obj as? NSArray {
             var arrayString = "[\n"
-            for (index, value) in enumerate(array) {
+            for (index, value) in array.enumerate() {
                 let valueString = JSONValue(value)._printableString(indent + "  ")
                 if index != array.count - 1 {
                     arrayString += "\(indent)  \(valueString),\n"
@@ -330,13 +333,13 @@ extension JSONValue: Printable {
 
 extension JSONValue: BooleanType {
     public var boolValue: Bool {
-        if let error = obj as? JSONParent {
+        if let _ = obj as? JSONParent {
             return false
         }
-        else if let error = obj as? NSError {
+        else if let _ = obj as? NSError {
             return false
         }
-        else if let error = obj as? NSNull {
+        else if let _ = obj as? NSNull {
             return false
         }
         else if obj == nil {
